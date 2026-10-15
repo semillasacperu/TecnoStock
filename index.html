@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sistema de inventario para una tienda de tecnología">
+  <title>TecnoStock | Inventario tecnológico</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="#inicio" data-view="inicio" aria-label="Ir al inicio">
+        <span class="brand-icon">T</span>
+        <span>
+          <strong>TecnoStock</strong>
+          <small>Inventario tecnológico</small>
+        </span>
+      </a>
+
+      <p class="menu-title">MENÚ PRINCIPAL</p>
+
+      <nav id="menu-principal" aria-label="Navegación principal">
+        <a class="nav-link active" href="#inicio" data-view="inicio">▦ Inicio</a>
+        <a class="nav-link" href="#productos" data-view="productos">▤ Productos</a>
+        <a class="nav-link" href="#formulario" data-view="formulario">＋ Registrar producto</a>
+        <a class="nav-link" href="#movimientos" data-view="movimientos">⇄ Movimientos</a>
+        <a class="nav-link" href="#alertas" data-view="alertas">⚠ Alertas de stock</a>
+      </nav>
+
+      <p class="sidebar-footer">HTML5 · CSS3 · JavaScript ES6+</p>
+    </aside>
+
+    <div class="workspace">
+      <header class="topbar">
+        <div class="topbar-status">
+          <span class="online-dot"></span>
+          Sistema de inventario
+        </div>
+
+        <button class="btn btn-primary" id="btn-nuevo-header" type="button">
+          ＋ Nuevo producto
+        </button>
+      </header>
+
+      <main>
+        <div class="notice">
+          Aplicación funcional: los productos y movimientos se guardan automáticamente en el navegador.
+        </div>
+
+        <!-- PANEL PRINCIPAL -->
+        <section class="view active" id="inicio">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">VISTA GENERAL</p>
+              <h1>Panel de inventario</h1>
+              <p>Resumen de existencias y productos que requieren atención.</p>
+            </div>
+
+            <button class="btn btn-primary" id="btn-ver-productos" type="button">
+              Ver productos
+            </button>
+          </div>
+
+          <div class="metrics">
+            <article class="metric-card">
+              <span>Productos registrados</span>
+              <strong id="total-productos">0</strong>
+              <small>Referencias activas</small>
+            </article>
+
+            <article class="metric-card">
+              <span>Unidades disponibles</span>
+              <strong id="total-unidades">0</strong>
+              <small>Existencias totales</small>
+            </article>
+
+            <article class="metric-card metric-wide">
+              <span>Valor del inventario</span>
+              <strong id="valor-inventario">S/ 0.00</strong>
+              <small>Precio × existencias</small>
+            </article>
+
+            <article class="metric-card">
+              <span>Stock bajo</span>
+              <strong class="warning-text" id="total-bajos">0</strong>
+              <small>Requieren reposición</small>
+            </article>
+
+            <article class="metric-card">
+              <span>Agotados</span>
+              <strong class="danger-text" id="total-agotados">0</strong>
+              <small>Sin unidades disponibles</small>
+            </article>
+          </div>
+
+          <div class="two-columns">
+            <article class="card">
+              <div class="card-heading">
+                <div>
+                  <h2>Atención prioritaria</h2>
+                  <p>Productos con stock bajo o agotado</p>
+                </div>
+              </div>
+
+              <ul class="clean-list" id="lista-prioridad"></ul>
+            </article>
+
+            <article class="card">
+              <div class="card-heading">
+                <div>
+                  <h2>Actividad reciente</h2>
+                  <p>Últimos movimientos registrados</p>
+                </div>
+              </div>
+
+              <ul class="clean-list" id="lista-actividad"></ul>
+            </article>
+          </div>
+
+          <article class="card category-card">
+            <div class="card-heading">
+              <div>
+                <h2>Distribución por categoría</h2>
+                <p>Referencias y unidades registradas</p>
+              </div>
+            </div>
+
+            <div class="category-summary" id="resumen-categorias"></div>
+          </article>
+        </section>
+
+        <!-- LISTADO DE PRODUCTOS -->
+        <section class="view" id="productos">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">CATÁLOGO</p>
+              <h1>Productos</h1>
+              <p>Busca, filtra, ordena y administra los artículos registrados.</p>
+            </div>
+
+            <div class="heading-actions">
+              <button class="btn btn-outline" id="btn-exportar" type="button">
+                Exportar CSV
+              </button>
+
+              <button class="btn btn-primary" id="btn-nuevo-producto" type="button">
+                ＋ Registrar producto
+              </button>
+            </div>
+          </div>
+
+          <article class="card">
+            <div class="filters">
+              <label class="search-field">
+                Buscar
+                <input id="buscar" type="search" placeholder="Nombre, código, marca o categoría">
+              </label>
+
+              <label>
+                Categoría
+                <select id="filtro-categoria">
+                  <option value="todas">Todas</option>
+                </select>
+              </label>
+
+              <label>
+                Estado
+                <select id="filtro-estado">
+                  <option value="todos">Todos</option>
+                  <option value="disponible">Disponible</option>
+                  <option value="bajo">Stock bajo</option>
+                  <option value="agotado">Agotado</option>
+                </select>
+              </label>
+
+              <label>
+                Ordenar por
+                <select id="orden-productos">
+                  <option value="nombre-asc">Nombre: A–Z</option>
+                  <option value="nombre-desc">Nombre: Z–A</option>
+                  <option value="precio-asc">Precio: menor a mayor</option>
+                  <option value="precio-desc">Precio: mayor a menor</option>
+                  <option value="stock-asc">Stock: menor a mayor</option>
+                  <option value="stock-desc">Stock: mayor a menor</option>
+                  <option value="reciente">Actualización reciente</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="filter-actions">
+              <button class="btn btn-link" id="btn-limpiar-filtros" type="button">
+                Limpiar filtros
+              </button>
+            </div>
+
+            <div class="table-info">
+              <h2>Listado de existencias</h2>
+              <span id="contador-productos">0 productos</span>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Imagen</th>
+                    <th>Producto</th>
+                    <th>Categoría</th>
+                    <th>Precio</th>
+                    <th>Stock</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+
+                <tbody id="tabla-productos"></tbody>
+              </table>
+            </div>
+
+            <div class="empty-state" id="productos-vacios" hidden>
+              <strong>No se encontraron productos.</strong>
+              <span>Prueba con otros criterios o limpia los filtros.</span>
+            </div>
+
+            <nav class="pagination" id="paginacion-productos" aria-label="Paginación de productos"></nav>
+          </article>
+        </section>
+
+        <!-- DETALLE DEL PRODUCTO -->
+        <section class="view" id="detalle">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">CATÁLOGO / DETALLE</p>
+              <h1 id="detalle-nombre">Detalle del producto</h1>
+              <p>Información completa e historial de la referencia seleccionada.</p>
+            </div>
+
+            <button class="btn btn-outline" id="btn-volver-listado" type="button">
+              Volver al listado
+            </button>
+          </div>
+
+          <article class="card detail-grid">
+            <div class="detail-image-container">
+              <img id="detalle-imagen" class="product-image product-image-detail" src="img/producto-sin-imagen.svg"
+                alt="Imagen del producto seleccionado">
+            </div>
+
+            <div class="detail-information">
+              <div id="detalle-estado"></div>
+
+              <dl class="detail-list">
+                <div>
+                  <dt>Código</dt>
+                  <dd id="detalle-codigo">—</dd>
+                </div>
+
+                <div>
+                  <dt>Categoría</dt>
+                  <dd id="detalle-categoria">—</dd>
+                </div>
+
+                <div>
+                  <dt>Marca</dt>
+                  <dd id="detalle-marca">—</dd>
+                </div>
+
+                <div>
+                  <dt>Proveedor</dt>
+                  <dd id="detalle-proveedor">—</dd>
+                </div>
+
+                <div>
+                  <dt>Ubicación</dt>
+                  <dd id="detalle-ubicacion">—</dd>
+                </div>
+
+                <div>
+                  <dt>Precio</dt>
+                  <dd id="detalle-precio">—</dd>
+                </div>
+
+                <div>
+                  <dt>Stock actual</dt>
+                  <dd id="detalle-stock">—</dd>
+                </div>
+
+                <div>
+                  <dt>Stock mínimo</dt>
+                  <dd id="detalle-minimo">—</dd>
+                </div>
+
+                <div>
+                  <dt>Registrado</dt>
+                  <dd id="detalle-creado">—</dd>
+                </div>
+
+                <div>
+                  <dt>Última actualización</dt>
+                  <dd id="detalle-actualizado">—</dd>
+                </div>
+
+                <div class="detail-description">
+                  <dt>Descripción</dt>
+                  <dd id="detalle-descripcion">—</dd>
+                </div>
+              </dl>
+
+              <div class="detail-actions">
+                <button class="btn btn-primary" id="btn-editar-detalle" type="button">
+                  Editar producto
+                </button>
+
+                <button class="btn btn-outline" id="btn-movimiento-detalle" type="button">
+                  Registrar movimiento
+                </button>
+              </div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="table-info">
+              <h2>Historial del producto</h2>
+              <span id="contador-historial-producto">0 movimientos</span>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Tipo</th>
+                    <th>Cantidad</th>
+                    <th>Balance</th>
+                    <th>Motivo</th>
+                  </tr>
+                </thead>
+
+                <tbody id="tabla-historial-producto"></tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+
+        <!-- FORMULARIO DE PRODUCTOS -->
+        <section class="view" id="formulario">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">CATÁLOGO / EDICIÓN</p>
+              <h1 id="titulo-formulario">Registrar producto</h1>
+              <p>Completa los campos obligatorios para guardar el artículo.</p>
+            </div>
+          </div>
+
+          <article class="card form-card">
+            <form id="form-producto" novalidate>
+              <input id="producto-id" type="hidden">
+
+              <div class="form-grid">
+                <label>
+                  Código *
+                  <input id="codigo" type="text" placeholder="TEC-008" maxlength="10" required>
+                  <small class="error" data-error="codigo"></small>
+                </label>
+
+                <label>
+                  Nombre *
+                  <input id="nombre" type="text" placeholder="Hub USB-C" maxlength="80" required>
+                  <small class="error" data-error="nombre"></small>
+                </label>
+
+                <label>
+                  Categoría *
+                  <input id="categoria" type="text" placeholder="Accesorios" maxlength="40" required>
+                  <small class="error" data-error="categoria"></small>
+                </label>
+
+                <label>
+                  Marca
+                  <input id="marca" type="text" placeholder="Lenovo, Samsung, Logitech..." maxlength="40">
+                </label>
+
+                <label>
+                  Proveedor
+                  <input id="proveedor" type="text" placeholder="Nombre del proveedor" maxlength="60">
+                </label>
+
+                <label>
+                  Ubicación
+                  <input id="ubicacion" type="text" placeholder="Almacén A / Estante 2" maxlength="60">
+                </label>
+
+                <label>
+                  Precio (S/) *
+                  <input id="precio" type="number" min="0.01" step="0.01" required>
+                  <small class="error" data-error="precio"></small>
+                </label>
+
+                <label>
+                  <span id="etiqueta-stock">Stock inicial *</span>
+                  <input id="stock" type="number" min="0" step="1" required>
+                  <small class="error" data-error="stock"></small>
+                  <small id="ayuda-stock" class="field-help"></small>
+                </label>
+
+                <label>
+                  Stock mínimo *
+                  <input id="stock-minimo" type="number" min="1" step="1" value="5" required>
+                  <small class="error" data-error="stockMinimo"></small>
+                </label>
+
+                <label class="full-field">
+                  Descripción
+                  <textarea id="descripcion" rows="4" maxlength="300"
+                    placeholder="Características principales del producto"></textarea>
+                </label>
+
+                <label class="full-field">
+                  Dirección de la imagen
+                  <input id="imagen" type="url" placeholder="https://ejemplo.com/producto.jpg">
+                  <small class="error" data-error="imagen"></small>
+                  <small class="field-help">
+                    Utiliza una dirección HTTPS. Si falla, se mostrará una imagen predeterminada.
+                  </small>
+                </label>
+
+                <div class="full-field image-preview-container">
+                  <span>Vista previa</span>
+                  <img id="vista-previa-imagen" class="product-image image-preview" src="img/producto-sin-imagen.svg"
+                    alt="Vista previa de la imagen del producto">
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button class="btn btn-outline" id="btn-cancelar" type="button">
+                  Cancelar
+                </button>
+
+                <button class="btn btn-primary" type="submit">
+                  Guardar producto
+                </button>
+              </div>
+            </form>
+          </article>
+        </section>
+
+        <!-- MOVIMIENTOS -->
+        <section class="view" id="movimientos">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">TRAZABILIDAD</p>
+              <h1>Movimientos de inventario</h1>
+              <p>Registra entradas y salidas con balance automático.</p>
+            </div>
+          </div>
+
+          <article class="card form-card">
+            <form id="form-movimiento" novalidate>
+              <div class="form-grid">
+                <label>
+                  Producto *
+                  <select id="movimiento-producto" required></select>
+                </label>
+
+                <label>
+                  Tipo *
+                  <select id="movimiento-tipo" required>
+                    <option value="entrada">Entrada (+)</option>
+                    <option value="salida">Salida (-)</option>
+                  </select>
+                </label>
+
+                <label>
+                  Cantidad *
+                  <input id="movimiento-cantidad" type="number" min="1" step="1" required>
+                </label>
+
+                <label>
+                  Motivo *
+                  <input id="movimiento-motivo" type="text" maxlength="100" placeholder="Compra, venta o devolución"
+                    required>
+                </label>
+              </div>
+
+              <p class="form-message" id="error-movimiento" role="alert"></p>
+
+              <div class="form-actions">
+                <button class="btn btn-primary" type="submit">
+                  Registrar movimiento
+                </button>
+              </div>
+            </form>
+          </article>
+
+          <article class="card">
+            <div class="table-info">
+              <h2>Historial general</h2>
+              <span id="contador-movimientos">0 movimientos</span>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Producto</th>
+                    <th>Tipo</th>
+                    <th>Cantidad</th>
+                    <th>Balance</th>
+                    <th>Motivo</th>
+                  </tr>
+                </thead>
+
+                <tbody id="tabla-movimientos"></tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+
+        <!-- ALERTAS -->
+        <section class="view" id="alertas">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">MONITOREO</p>
+              <h1>Alertas de stock</h1>
+              <p>Productos agotados o próximos a agotarse.</p>
+            </div>
+          </div>
+
+          <div class="alert-summary">
+            <article class="alert-card danger-bg">
+              <strong id="alerta-agotados">0</strong>
+              <span>Agotados</span>
+            </article>
+
+            <article class="alert-card warning-bg">
+              <strong id="alerta-bajos">0</strong>
+              <span>Stock bajo</span>
+            </article>
+          </div>
+
+          <article class="card">
+            <h2>Productos que requieren atención</h2>
+            <ul class="clean-list" id="lista-alertas"></ul>
+          </article>
+
+          <article class="card reset-card">
+            <div>
+              <h2>Datos de demostración</h2>
+              <p>Esta acción reemplaza los cambios actuales por los datos iniciales.</p>
+            </div>
+
+            <button class="btn btn-danger" id="btn-restaurar" type="button">
+              Restaurar datos
+            </button>
+          </article>
+        </section>
+      </main>
+
+      <footer>
+        TecnoStock © 2026 · Proyecto académico de Desarrollo Front-End
+      </footer>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/app.js" defer></script>
+</body>
+
+</html>
