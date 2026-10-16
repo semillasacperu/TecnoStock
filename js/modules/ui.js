@@ -8,7 +8,7 @@ import { saveImage, getImageURL, deleteImages } from "./image-store.js";
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const assets = new Map();
-let session = null, toastTimer;
+let session = null, toastTimer, productRenderVersion = 0;
 
 const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const badge = s => `<span class="badge ${s}">${s === "empty" ? "Agotado" : s === "low" ? "Stock bajo" : "Disponible"}</span>`;
@@ -70,23 +70,71 @@ async function imageFor(p) {
 }
 
 async function renderProducts() {
-    const list = filteredProducts(), table = $("#products-table");
-    table.replaceChildren();
-    $("#product-count").textContent = `${list.length} producto${list.length === 1 ? "" : "s"}`;
-    $("#empty-products").hidden = list.length > 0;
+    const renderVersion = ++productRenderVersion;
+    const list = filteredProducts();
+    const table = $("#products-table");
 
-    const cats = [...new Set(getProducts().map(p => p.category))].sort((a, b) => a.localeCompare(b, "es"));
-    const select = $("#category-filter"), old = select.value;
-    select.replaceChildren(new Option("Todas", ""), ...cats.map(c => new Option(c, c)));
-    select.value = cats.includes(old) ? old : "";
+    const categories = [...new Set(getProducts().map(product => product.category))]
+        .sort((a, b) => a.localeCompare(b, "es"));
 
-    for (const p of list) {
-        const tr = document.createElement("tr"), src = await imageFor(p);
-        tr.innerHTML = `<td><img class="product-thumb" src="${esc(src)}" alt="${esc(p.name)}" loading="lazy"></td><td><span class="product-name">${esc(p.name)}</span><small>${esc(p.code)} · ${esc(p.brand || "Sin marca")}</small></td><td>${esc(p.category)}</td><td>${money(p.price)}</td><td>${p.stock}</td><td>${badge(statusOf(p))}</td><td><button class="table-action" data-detail="${esc(p.id)}">Ver</button><button class="table-action" data-edit="${esc(p.id)}">Editar</button><button class="table-action danger" data-delete="${esc(p.id)}">Eliminar</button></td>`;
-        const img = tr.querySelector("img");
-        img.addEventListener("error", () => { img.onerror = null; img.src = fallbackImage; });
-        table.append(tr);
+    const select = $("#category-filter");
+    const previousCategory = select.value;
+
+    select.replaceChildren(
+        new Option("Todas", ""),
+        ...categories.map(category => new Option(category, category))
+    );
+    select.value = categories.includes(previousCategory) ? previousCategory : "";
+
+    const rows = document.createDocumentFragment();
+
+    for (const product of list) {
+        const imageSource = await imageFor(product);
+
+        // Ignora una tabla antigua si ya comenzó un renderizado más reciente.
+        if (renderVersion !== productRenderVersion) return;
+
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+      <td>
+        <img class="product-thumb"
+             src="${esc(imageSource)}"
+             alt="${esc(product.name)}"
+             loading="lazy">
+      </td>
+      <td>
+        <span class="product-name">${esc(product.name)}</span>
+        <small>${esc(product.code)} · ${esc(product.brand || "Sin marca")}</small>
+      </td>
+      <td>${esc(product.category)}</td>
+      <td>${money(product.price)}</td>
+      <td>${product.stock}</td>
+      <td>${badge(statusOf(product))}</td>
+      <td>
+        <button class="table-action" data-detail="${esc(product.id)}">Ver</button>
+        <button class="table-action" data-edit="${esc(product.id)}">Editar</button>
+        <button class="table-action danger" data-delete="${esc(product.id)}">Eliminar</button>
+      </td>
+    `;
+
+        const image = row.querySelector("img");
+        image.addEventListener("error", () => {
+            image.onerror = null;
+            image.src = fallbackImage;
+        });
+
+        rows.append(row);
     }
+
+    if (renderVersion !== productRenderVersion) return;
+
+    // Actualiza la tabla una sola vez, cuando todas las filas están preparadas.
+    table.replaceChildren(rows);
+
+    $("#product-count").textContent =
+        `${list.length} producto${list.length === 1 ? "" : "s"}`;
+    $("#empty-products").hidden = list.length > 0;
 }
 
 function renderMovements() {
