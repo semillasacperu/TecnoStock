@@ -1070,9 +1070,9 @@ const UI = (() => {
         document.querySelector(
             "#contador-historial-producto"
         ).textContent = `${movements.length} ${movements.length === 1
-                ? "movimiento"
-                : "movimientos"
-            }`;
+            ? "movimiento"
+            : "movimientos"
+        }`;
 
         tableBody.innerHTML = movements.length
             ? movements.map(movement => `
@@ -1354,9 +1354,9 @@ const UI = (() => {
         document.querySelector(
             "#contador-movimientos"
         ).textContent = `${state.movements.length} ${state.movements.length === 1
-                ? "movimiento"
-                : "movimientos"
-            }`;
+            ? "movimiento"
+            : "movimientos"
+        }`;
 
         tableBody.innerHTML = state.movements.length
             ? state.movements.map(movement => `
@@ -1610,8 +1610,8 @@ const UI = (() => {
         toast.textContent = message;
 
         toast.className = `toast show ${type === "error"
-                ? "error-toast"
-                : ""
+            ? "error-toast"
+            : ""
             }`;
 
         window.clearTimeout(showToast.timer);
